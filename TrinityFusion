@@ -159,7 +159,8 @@ main: {
     chdir($output_dir) or die "Error, cannot cd to $output_dir";
 
     my $chkpts_dir = "$output_dir/__chkpts";
-    my $pipeliner = new Pipeliner( '-checkpoint_dir' => $chkpts_dir );
+    my $pipeliner = new Pipeliner( '-checkpoint_dir' => $chkpts_dir,
+                                   '-verbose' => 1);
     
     ## run DISCASM
     my $cmd = "$DISCASM "
@@ -168,12 +169,13 @@ main: {
         . " --left_fq $left_fq "
         . " --right_fq $right_fq "
         . " --out_dir trinity_discasm "
+        . " --CPU $CPU "
         . " --denovo_assembler Trinity ";
 
     $pipeliner->add_commands(new Command($cmd, "discasm.ok"));
-
+    
     ## run GMAP-fusion
-    $cmd = "$GMAP_FUSION -T trinity_discasm/trinity_out_dir/Trinity.fasta"
+    $cmd = "$GMAP_FUSION -T trinity_discasm/discasm.Trinity.fasta"
         . " --genome_lib_dir $genome_lib_dir "
         . " --left_fq $left_fq "
         . " --right_fq $right_fq "
@@ -183,13 +185,19 @@ main: {
         . " --min_sumJS $MIN_SUM_JS "
         . " --min_novel_junction_support $MIN_NOVEL_J "
         . " --split_breakpoint_extend_length $SPLIT_BREAKPOINT_EXTEND_LENGTH "
-        . " --max_fuzzy_overlap $MAX_FUZZY_OVERLAP ";
-
+        . " --max_fuzzy_overlap $MAX_FUZZY_OVERLAP "
+        . " -o trinity_fusion_gmap";
+    
     $pipeliner->add_commands(new Command($cmd, "gmap-fusion.ok"));
+
+    $pipeliner->add_commands(new Command("ln -sf trinity_fusion_gmap/GMAP-fusion.fusion_predictions.tsv TrinityFusion.fusion_predictions.tsv",
+                                         "sym_final.ok"));
     
     $pipeliner->run();
 
+    print STDERR "\n\nDone.\n\nSee results at: $output_dir/TrinityFusion.fusion_predictions.tsv\n\n";
+    
     exit(0);
 }
 
-        
+
