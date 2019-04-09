@@ -115,18 +115,6 @@ RUN GMAP_URL="http://research-pub.gene.com/gmap/src/gmap-gsnap-$GMAP_VERSION.tar
 
 RUN apt-get install -y git && apt-get clean
 
-WORKDIR $SRC
-
-ENV TrinityFusion_CO cdcbd3bda3471e8fddd8a1d0b61d7c1ec264744f
-
-RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
-	cd TrinityFusion && \
-    git checkout ${TrinityFusion_CO} && \
-    git submodule init && git submodule update
-
-
-
-
 ENV TRINITY_HOME=/usr/local/src/trinityrnaseq-Trinity-v${TRINITY_VERSION}
 ENV PATH=${PATH}:${TRINITY_HOME}
 
@@ -138,3 +126,19 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
     python get-pip.py
 
 RUN pip install numpy pysam
+
+
+WORKDIR $SRC
+
+ENV TrinityFusion_CO cdcbd3bda3471e8fddd8a1d0b61d7c1ec264744f
+
+RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
+	cd TrinityFusion && \
+    git checkout ${TrinityFusion_CO} && \
+    git submodule init && git submodule update && \
+    cd GMAP-fusion && git submodule init && git submodule update
+    
+
+
+
+
