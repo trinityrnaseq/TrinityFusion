@@ -22,6 +22,11 @@ my $output_dir;
 ## optional
 my $genome_lib_dir = $ENV{CTAT_GENOME_LIB};
 my $CPU = 4;
+
+## Trinity opts
+my $SS_lib_type = "";
+my $max_memory = "50G";
+
 my $SHOW_FULL_USAGE_INFO = 0;
 
 ## GMAP-fusion options
@@ -44,13 +49,19 @@ my $usage = <<__EOUSAGE;
 #
 #  --right_fq <string>   reads_2.fq
 #
+#  (If just given the reads, runs Trinity de novo assembly first on all reads)
+# Optional:
+#
 #  --chimeric_junctions <string>  STAR Chimeric.out.junction file
 #                        
+#  (if given the chimeric junctions file, restricts to the chimeric junction reads alone)
+#
 #  --aligned_bam <string>         STAR aligned bam file
+#
+#  (if given the aligned_bam & the chimeric junctions), assembles the unmapped and chimeric reads, not all reads).
 #                        
 #  --output_dir STR_OUT_DIR          output directory
 #                        
-#
 # Optional:
 #
 #  --genome_lib_dir <string>  directory for CTAT genome lib  (or use env var \$CTAT_GENOME_LIB
@@ -58,6 +69,7 @@ my $usage = <<__EOUSAGE;
 #  --CPU <int>                     :number threads (default $CPU)
 #
 #  --show_full_usage_info     flag, shows all options available.
+#
 #
 ################################################################
 
@@ -68,6 +80,15 @@ __EOUSAGE
 
 my $additional_usage_info = <<__EXTRA_USAGE;
 #  Additional parameters:
+#
+# 
+#  Trinity de novo options: (for full-denovo, not chimeric/unmapped read assembly)
+#
+#  --SS_lib_type <str>            RF or FR (only if doing Trinity de novo assembly and not specifying chimeric reads)
+#
+#  --max_memory <str>             Trinity max memory setting (default: $max_memory) 
+#
+#  GMAP-fusion options:
 #
 #  --min_chim_len|L <int>            :minimum length for a chimeric alignment (default: $MIN_TRANS_LEN_TRY_CHIM)
 #
@@ -82,7 +103,7 @@ my $additional_usage_info = <<__EXTRA_USAGE;
 #
 #  --max_fuzzy_overlap <int>               :maximum allowed overlap of extended length from breakpoint (default: $MAX_FUZZY_OVERLAP)
 #
-#  
+#
 #############################################################################################
 
 
@@ -105,6 +126,11 @@ __EXTRA_USAGE
               ## Optional
               'genome_lib_dir=s' => \$genome_lib_dir,
               'CPU=i' => \$CPU,
+
+              ## Trinity de novo options:
+              'SS_lib_type=s' =>  \$SS_lib_type,
+              'max_memory=s' => $max_memory,
+
               'show_full_usage_info' => \$SHOW_FULL_USAGE_INFO,
               
               ## gmap-fusion opts
@@ -114,7 +140,7 @@ __EXTRA_USAGE
               'min_novel_junction_support=i' => \$MIN_NOVEL_J,
               'split_breakpoint_extend_length=i' => \$SPLIT_BREAKPOINT_EXTEND_LENGTH,
               'max_fuzzy_overlap=i' => \$MAX_FUZZY_OVERLAP,
-              
+                            
               'version' => \$SHOW_VERSION,
               
 );
@@ -134,25 +160,34 @@ if ($SHOW_VERSION) {
     print "\n\tTrinityFusion v$VERSION\n\n";
 }
 
-unless($left_fq && $right_fq && $chimeric_junctions && $aligned_bam && $output_dir && $genome_lib_dir) {
+unless($left_fq && $right_fq && $output_dir && $genome_lib_dir) {
     die $usage;
 }
 
+if ($aligned_bam && ! $chimeric_junctions) {
+    die "$usage\n\n\t*** Error, must specify chimeric junctions file if providing the aligned bam file";
+}
 
 # set full paths for all inputs
 $left_fq = &Pipeliner::ensure_full_path($left_fq);
 $right_fq = &Pipeliner::ensure_full_path($right_fq);
-$chimeric_junctions = &Pipeliner::ensure_full_path($chimeric_junctions);
-$aligned_bam = &Pipeliner::ensure_full_path($aligned_bam);
+$chimeric_junctions = &Pipeliner::ensure_full_path($chimeric_junctions) if ($chimeric_junctions);
+$aligned_bam = &Pipeliner::ensure_full_path($aligned_bam) if ($aligned_bam);
 $output_dir = &Pipeliner::ensure_full_path($output_dir);
 $genome_lib_dir = &Pipeliner::ensure_full_path($genome_lib_dir);
 
 my $DISCASM = $FindBin::Bin . "/DISCASM/DISCASM";
 my $GMAP_FUSION = $FindBin::Bin . "/GMAP-fusion/GMAP-fusion";
 
+## ensure we can find Trinity:
+my $trinity_path = `which Trinity`;
+unless ($trinity_path =~ /\w/) {
+    die "Error, cannot find the Trinity software. Be sure to have Trinity in your PATH setting";
+}
+
 
 main: {
-     
+    
     if (! -d $output_dir) {
         &Pipeliner::process_cmd("mkdir -p $output_dir");
     }
@@ -161,21 +196,55 @@ main: {
     my $chkpts_dir = "$output_dir/__chkpts";
     my $pipeliner = new Pipeliner( '-checkpoint_dir' => $chkpts_dir,
                                    '-verbose' => 1);
-    
-    ## run DISCASM
-    my $cmd = "$DISCASM "
-        . " --chimeric_junctions $chimeric_junctions "
-        . " --aligned_bam $aligned_bam "
-        . " --left_fq $left_fq "
-        . " --right_fq $right_fq "
-        . " --out_dir trinity_discasm "
-        . " --CPU $CPU "
-        . " --denovo_assembler Trinity ";
 
-    $pipeliner->add_commands(new Command($cmd, "discasm.ok"));
+    my $gmap_fusion_target = "";
+
+    my $TrinityFusionMode = ""; # D, UC, or C
+    if ($chimeric_junctions) {
+        
+        ## run DISCASM
+        my $cmd = "$DISCASM "
+            . " --chimeric_junctions $chimeric_junctions "
+            . " --left_fq $left_fq "
+            . " --right_fq $right_fq "
+            . " --out_dir trinity_discasm "
+            . " --CPU $CPU "
+            . " --denovo_assembler Trinity ";
+
+        $TrinityFusionMode = "C";
+        if ($aligned_bam) {
+            $cmd .= " --aligned_bam $aligned_bam ";
+            $TrinityFusionMode = "UC";
+        }
+        
+        $pipeliner->add_commands(new Command($cmd, "discasm.ok"));
+
+        $gmap_fusion_target = "trinity_discasm/discasm.Trinity.fasta";
+        
+    }
+    else {
+        ## de novo Trinity
+        my $cmd = "Trinity "
+            . " --seqType fq "
+            . " --left $left_fq "
+            . " --right $right_fq "
+            . " --max_memory $max_memory "
+            . " --CPU $CPU "
+            . " --output trinity_denovo_outdir "; 
+
+        $pipeliner->add_commands(new Command($cmd, "trinity_denovo.ok"));
+
+        $gmap_fusion_target = "Trinity.denovo.fasta";
+        $pipeliner->add_commands(new Command("mv trinity_denovo_outdir/Trinity.fasta $gmap_fusion_target", "trinity_renamed.ok"));
+
+        $pipeliner->add_commands(new Command("rm -rf ./trinity_denovo_outdir", "trinity_full_cleanup.ok"));
+
+        $TrinityFusionMode = "D";
+    }
     
     ## run GMAP-fusion
-    $cmd = "$GMAP_FUSION -T trinity_discasm/discasm.Trinity.fasta"
+    my $gmap_outdir = "trinity_fusion-${TrinityFusionMode}_gmap";
+    my $cmd = "$GMAP_FUSION -T $gmap_fusion_target"
         . " --genome_lib_dir $genome_lib_dir "
         . " --left_fq $left_fq "
         . " --right_fq $right_fq "
@@ -186,18 +255,17 @@ main: {
         . " --min_novel_junction_support $MIN_NOVEL_J "
         . " --split_breakpoint_extend_length $SPLIT_BREAKPOINT_EXTEND_LENGTH "
         . " --max_fuzzy_overlap $MAX_FUZZY_OVERLAP "
-        . " -o trinity_fusion_gmap";
+        . " -o $gmap_outdir";
     
     $pipeliner->add_commands(new Command($cmd, "gmap-fusion.ok"));
-
-    $pipeliner->add_commands(new Command("ln -sf trinity_fusion_gmap/GMAP-fusion.fusion_predictions.tsv TrinityFusion.fusion_predictions.tsv",
+    
+    $pipeliner->add_commands(new Command("ln -sf $gmap_outdir/GMAP-fusion.fusion_predictions.tsv TrinityFusion-${TrinityFusionMode}.fusion_predictions.tsv",
                                          "sym_final.ok"));
     
     $pipeliner->run();
-
-    print STDERR "\n\nDone.\n\nSee results at: $output_dir/TrinityFusion.fusion_predictions.tsv\n\n";
+    
+    print STDERR "\n\nDone.\n\nSee results at: $output_dir/TrinityFusion-${TrinityFusionMode}.fusion_predictions.tsv\n\n";
     
     exit(0);
 }
-
 
