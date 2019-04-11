@@ -8,7 +8,8 @@ use FindBin;
 use lib("$FindBin::Bin/PerlLib");
 use Pipeliner;
 
-my $VERSION = 0.1.0;
+
+my $__VERSION__ = "0.2.0";
 
 my $help_flag;
 
@@ -39,6 +40,8 @@ my $MAX_FUZZY_OVERLAP = 12;
 
 my $SHOW_VERSION = 0;
 
+
+
 my $usage = <<__EOUSAGE;
 
 ################################################################
@@ -50,7 +53,10 @@ my $usage = <<__EOUSAGE;
 #  --right_fq <string>   reads_2.fq
 #
 #  (If just given the reads, runs Trinity de novo assembly first on all reads)
-# Optional:
+#
+#  --output_dir STR_OUT_DIR          output directory
+#
+# Alternative TrinityFusion modes, using STAR outputs
 #
 #  --chimeric_junctions <string>  STAR Chimeric.out.junction file
 #                        
@@ -60,8 +66,7 @@ my $usage = <<__EOUSAGE;
 #
 #  (if given the aligned_bam & the chimeric junctions), assembles the unmapped and chimeric reads, not all reads).
 #                        
-#  --output_dir STR_OUT_DIR          output directory
-#                        
+#
 # Optional:
 #
 #  --genome_lib_dir <string>  directory for CTAT genome lib  (or use env var \$CTAT_GENOME_LIB
@@ -70,6 +75,7 @@ my $usage = <<__EOUSAGE;
 #
 #  --show_full_usage_info     flag, shows all options available.
 #
+#  --version                   show TrinityFusion version info: $__VERSION__
 #
 ################################################################
 
@@ -146,6 +152,12 @@ __EXTRA_USAGE
 );
 
 
+if ($SHOW_VERSION) {
+    print "\n\tTrinityFusion v$__VERSION__\n\n";
+    exit(0);
+}
+
+
 if ($SHOW_FULL_USAGE_INFO) {
     $usage .= $additional_usage_info;
     die $usage;
@@ -155,10 +167,6 @@ if ($help_flag) {
     die $usage;
 }
 
-
-if ($SHOW_VERSION) {
-    print "\n\tTrinityFusion v$VERSION\n\n";
-}
 
 unless($left_fq && $right_fq && $output_dir && $genome_lib_dir) {
     die $usage;

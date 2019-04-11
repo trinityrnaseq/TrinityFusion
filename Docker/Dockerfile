@@ -128,9 +128,22 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
 RUN pip install numpy pysam
 
 
+
+# Set the locale
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales
+
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+        update-locale LANG=en_US.UTF-8
+
+ENV LANG en_US.UTF-8
+
+
+
+
 WORKDIR $SRC
 
-ENV TrinityFusion_CO cdcbd3bda3471e8fddd8a1d0b61d7c1ec264744f
+ENV TrinityFusion_CO 1722a2b94c1b729bc75ac78a8f90501ab0c18447
 
 RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
 	cd TrinityFusion && \
@@ -142,11 +155,3 @@ RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
 
 
 
-# Set the locale
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales
-
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    dpkg-reconfigure --frontend=noninteractive locales && \
-        update-locale LANG=en_US.UTF-8
-
-ENV LANG en_US.UTF-8
