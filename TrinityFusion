@@ -9,7 +9,7 @@ use lib("$FindBin::Bin/PerlLib");
 use Pipeliner;
 
 
-my $__VERSION__ = "0.2.0";
+my $__VERSION__ = "0.3.0";
 
 my $help_flag;
 
@@ -40,7 +40,7 @@ my $MAX_FUZZY_OVERLAP = 12;
 
 my $SHOW_VERSION = 0;
 
-
+my $UTILDIR="$FindBin::Bin/util";
 
 my $usage = <<__EOUSAGE;
 
@@ -267,8 +267,10 @@ main: {
     
     $pipeliner->add_commands(new Command($cmd, "gmap-fusion.ok"));
     
-    $pipeliner->add_commands(new Command("ln -sf $gmap_outdir/GMAP-fusion.fusion_predictions.tsv TrinityFusion-${TrinityFusionMode}.fusion_predictions.tsv",
-                                         "sym_final.ok"));
+    $pipeliner->add_commands(new Command("cp $gmap_outdir/GMAP-fusion.fusion_predictions.tsv TrinityFusion-${TrinityFusionMode}.fusion_predictions.preliminary.tsv",
+                                         "define_prelim.ok"));
+
+    $pipeliner->add_commands(new Command("$UTILDIR/extract_ref_spliced_fusions.pl TrinityFusion-${TrinityFusionMode}.fusion_predictions.preliminary.tsv > TrinityFusion-${TrinityFusionMode}.fusion_predictions.tsv", "write_final.ok"));
     
     $pipeliner->run();
     
