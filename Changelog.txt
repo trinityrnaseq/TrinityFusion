@@ -1,2 +1,5 @@
+v0.3.0 # Apr 19, 2019
+-differentiate preliminary fusions from final fusion calls
+
 v0.2.0 # Apr 11, 2019
 -added explicit modes for D, C, and UC:  D=denovo, C=chimeric, UC:unmapped+chimeric
