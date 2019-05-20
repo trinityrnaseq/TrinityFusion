@@ -4,3 +4,6 @@
 [submodule "DISCASM"]
 	path = DISCASM
 	url = https://github.com/DISCASM/DISCASM.git
+[submodule "TrinityFusion.wiki"]
+	path = TrinityFusion.wiki
+	url = https://github.com/trinityrnaseq/TrinityFusion.wiki.git
