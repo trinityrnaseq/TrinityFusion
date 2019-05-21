@@ -19,4 +19,4 @@ TrinityFusion-UC:
 
 
 clean:
-	rm -rf ./TrinityFusion-*out_dir
+	rm -rf ./TrinityFusion-*outdir
