@@ -1,6 +1,5 @@
 
-all:
-	TrinityFusion-D TrinityFusion-C TrinityFusion-UC
+all: TrinityFusion-D TrinityFusion-C TrinityFusion-UC
 
 
 
