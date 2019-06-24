@@ -143,7 +143,7 @@ ENV LANG en_US.UTF-8
 
 WORKDIR $SRC
 
-ENV TrinityFusion_CO d1b7747
+ENV TrinityFusion_CO 0db730ba8568fa84990268537acb001410ab45bd
 
 RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
 	cd TrinityFusion && \
