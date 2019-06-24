@@ -238,8 +238,9 @@ main: {
             . " --right $right_fq "
             . " --max_memory $max_memory "
             . " --CPU $CPU "
+            . " --min_contig_length 100 "
             . " --output trinity_denovo_outdir "; 
-
+        
         $pipeliner->add_commands(new Command($cmd, "trinity_denovo.ok"));
 
         $gmap_fusion_target = "Trinity.denovo.fasta";

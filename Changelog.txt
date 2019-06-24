@@ -1,3 +1,6 @@
+v0.3.1 # June 24, 2019
+-set Trinity de novo 'D' mode to min contig length 100, consistent with 'C' and 'UC' modes.
+
 v0.3.0 # Apr 19, 2019
 -differentiate preliminary fusions from final fusion calls
 
