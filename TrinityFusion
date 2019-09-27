@@ -9,7 +9,7 @@ use lib("$FindBin::Bin/PerlLib");
 use Pipeliner;
 
 
-my $__VERSION__ = "0.3.0";
+my $__VERSION__ = "0.3.2";
 
 my $help_flag;
 

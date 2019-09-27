@@ -1,3 +1,7 @@
+v0.3.2 # Sep 26, 2019
+-extract reads from fastq retaining the native fastq record formatting from source file
+
+
 v0.3.1 # June 24, 2019
 -set Trinity de novo 'D' mode to min contig length 100, consistent with 'C' and 'UC' modes.
 
