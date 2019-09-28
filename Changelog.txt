@@ -1,4 +1,4 @@
-v0.3.2 # Sep 26, 2019
+v0.3.3 # Sep 28, 2019
 -extract reads from fastq retaining the native fastq record formatting from source file
 
 
