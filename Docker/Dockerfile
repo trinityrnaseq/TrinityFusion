@@ -135,15 +135,15 @@ RUN pip install pysam
 
 WORKDIR $SRC
 
-ENV TrinityFusion_CO ccd3431b0892ea8f800198efc10aab5076a3b195
+
+# patch for gmap installation
+RUN cp $SRC/gmap-$GMAP_VERSION/bin/* $BIN/.
+
+ENV TrinityFusion_CO 8fbe951780a790ac029e99a3761f664a15915dbd
 
 RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
 	cd TrinityFusion && \
     git checkout ${TrinityFusion_CO} && \
     git submodule init && git submodule update && \
     cd GMAP-fusion && git submodule init && git submodule update
-
-
-# patch for gmap installation
-RUN cp $SRC/gmap-$GMAP_VERSION/bin/* $BIN/.
 
