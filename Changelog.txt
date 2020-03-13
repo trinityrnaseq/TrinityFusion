@@ -1,3 +1,6 @@
+v0.3.5 # Mar 13, 2020
+-updated submodules so will be sync'd with latest ctat genome lib usage
+
 v0.3.4 # Oct 8, 2019
 -bugfix: extract reads from fastq retaining the native fastq record formatting from source file
 
