@@ -139,7 +139,7 @@ WORKDIR $SRC
 # patch for gmap installation
 RUN cp $SRC/gmap-$GMAP_VERSION/bin/* $BIN/.
 
-ENV TrinityFusion_CO c8d91066688cc298e45b91d73a0d2769c8eb08cb
+ENV TrinityFusion_CO eb1b73f910edbe14fcdf76dd7126b31c3ecab4eb
 
 RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
 	cd TrinityFusion && \
