@@ -92,11 +92,6 @@ RUN wget https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfis
     ./configure && make && make install && \
     ln -sf $SRC/jellyfish-2.2.7/bin/jellyfish $BIN/.
 
-## Salmon
-WORKDIR $SRC
-RUN wget https://github.com/COMBINE-lab/salmon/releases/download/v0.9.1/Salmon-0.9.1_linux_x86_64.tar.gz && \
-    tar xvf Salmon-0.9.1_linux_x86_64.tar.gz && \
-    ln -s $SRC/Salmon-latest_linux_x86_64/bin/salmon $BIN/.
 
 
 ########
@@ -115,6 +110,21 @@ ENV TRINITY_HOME /usr/local/src/trinityrnaseq-v${TRINITY_VERSION}
 
 ENV PATH=${PATH}:${TRINITY_HOME}
 
+## Salmon
+WORKDIR $SRC
+ENV SALMON_VERSION=1.5.2
+RUN wget https://github.com/COMBINE-lab/salmon/releases/download/v${SALMON_VERSION}/Salmon-${SALMON_VERSION}_linux_x86_64.tar.gz && \
+    tar xvf Salmon-${SALMON_VERSION}_linux_x86_64.tar.gz && \
+    ln -sf $SRC/salmon-${SALMON_VERSION}_linux_x86_64/bin/salmon $BIN/.
+
+
+
+########
+## TrinityFusion
+
+
+RUN apt-get install -y curl python3-dev
+RUN pip install pysam
 
 
 ########
@@ -128,21 +138,16 @@ RUN GMAP_URL="http://research-pub.gene.com/gmap/src/gmap-gsnap-$GMAP_VERSION.tar
     cd gmap-$GMAP_VERSION && ./configure --prefix=`pwd` && make && make install
 
 
-
-########
-## TrinityFusion
-
-
-RUN apt-get install -y curl python3-dev
-RUN pip install pysam
-
-WORKDIR $SRC
-
-
 # patch for gmap installation
 RUN cp $SRC/gmap-$GMAP_VERSION/bin/* $BIN/.
 
-ENV TrinityFusion_CO 79990e911fff7c38a6c90ea6651e25d0a56b93e2
+
+
+## TrinityFusion
+
+WORKDIR $SRC
+
+ENV TrinityFusion_CO 3ed8ef27f926c1141c676abbd3fd804dc4e2eb4e
 
 RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
 	cd TrinityFusion && \

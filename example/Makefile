@@ -25,4 +25,4 @@ trinityFusion-UC-Docker:
 
 
 clean:
-	rm -rf ./TrinityFusion-*outdir
+	rm -rf ./TrinityFusion-*outdir ./TrinityFusion-UC_outdir-Docker/
