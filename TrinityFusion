@@ -227,7 +227,7 @@ main: {
         
         $pipeliner->add_commands(new Command($cmd, "discasm.ok"));
 
-        $gmap_fusion_target = "trinity_discasm/discasm.Trinity.fasta";
+        $gmap_fusion_target = "trinity_discasm.discasm.Trinity.fasta";
         
     }
     else {
@@ -244,7 +244,7 @@ main: {
         $pipeliner->add_commands(new Command($cmd, "trinity_denovo.ok"));
 
         $gmap_fusion_target = "Trinity.denovo.fasta";
-        $pipeliner->add_commands(new Command("mv trinity_denovo_outdir/Trinity.fasta $gmap_fusion_target", "trinity_renamed.ok"));
+        $pipeliner->add_commands(new Command("mv trinity_denovo_outdir.Trinity.fasta $gmap_fusion_target", "trinity_renamed.ok"));
 
         $pipeliner->add_commands(new Command("rm -rf ./trinity_denovo_outdir", "trinity_full_cleanup.ok"));
 
