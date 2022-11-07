@@ -227,7 +227,7 @@ main: {
         
         $pipeliner->add_commands(new Command($cmd, "discasm.ok"));
 
-        $gmap_fusion_target = "trinity_discasm.discasm.Trinity.fasta";
+        $gmap_fusion_target = "trinity_discasm/discasm.Trinity.fasta";
         
     }
     else {
