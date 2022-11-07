@@ -1,6 +1,9 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 MAINTAINER bhaas@broadinstitute.org
+
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y gcc g++ perl python3 automake make cmake \
                                        wget curl libdb-dev \
@@ -99,16 +102,16 @@ RUN wget https://github.com/COMBINE-lab/salmon/releases/download/v0.9.1/Salmon-0
 ########
 # Trinity
 
-ENV TRINITY_VERSION=2.8.5
+ENV TRINITY_VERSION=2.14.0
 
-RUN TRINITY_URL="https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v${TRINITY_VERSION}.tar.gz" && \
+RUN TRINITY_URL="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v${TRINITY_VERSION}/trinityrnaseq-v${TRINITY_VERSION}.FULL.tar.gz" && \
    cd $SRC && \
    wget $TRINITY_URL && \
-   tar xvf Trinity-v${TRINITY_VERSION}.tar.gz && \
-   cd trinityrnaseq-Trinity-v${TRINITY_VERSION} && make
+   tar xvf trinityrnaseq-v${TRINITY_VERSION}.FULL.tar.gz && \
+   cd trinityrnaseq-v${TRINITY_VERSION} && make
 
 
-ENV TRINITY_HOME /usr/local/src/trinityrnaseq-Trinity-v${TRINITY_VERSION}
+ENV TRINITY_HOME /usr/local/src/trinityrnaseq-v${TRINITY_VERSION}
 
 ENV PATH=${PATH}:${TRINITY_HOME}
 
@@ -139,7 +142,7 @@ WORKDIR $SRC
 # patch for gmap installation
 RUN cp $SRC/gmap-$GMAP_VERSION/bin/* $BIN/.
 
-ENV TrinityFusion_CO eb1b73f910edbe14fcdf76dd7126b31c3ecab4eb
+ENV TrinityFusion_CO 79990e911fff7c38a6c90ea6651e25d0a56b93e2
 
 RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
 	cd TrinityFusion && \
