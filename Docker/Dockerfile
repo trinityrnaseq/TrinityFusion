@@ -117,6 +117,19 @@ RUN wget https://github.com/COMBINE-lab/salmon/releases/download/v${SALMON_VERSI
     tar xvf Salmon-${SALMON_VERSION}_linux_x86_64.tar.gz && \
     ln -sf $SRC/salmon-${SALMON_VERSION}_linux_x86_64/bin/salmon $BIN/.
 
+## for minimap2
+RUN curl -L https://github.com/attractivechaos/k8/releases/download/v0.2.4/k8-0.2.4.tar.bz2 | tar -jxf - && \
+    cp k8-0.2.4/k8-`uname -s` $BIN/k8
+
+##############
+## STAR
+
+ENV STAR_VERSION=2.7.8a
+RUN STAR_URL="https://github.com/alexdobin/STAR/archive/${STAR_VERSION}.tar.gz" &&\
+    wget -P $SRC $STAR_URL &&\
+    tar -xvf $SRC/${STAR_VERSION}.tar.gz -C $SRC && \
+    mv $SRC/STAR-${STAR_VERSION}/bin/Linux_x86_64_static/STAR /usr/local/bin
+
 
 
 ########
@@ -137,5 +150,10 @@ RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
     git submodule init && git submodule update && \
     git submodule foreach --recursive git submodule init && \
     git submodule foreach --recursive git submodule update && \
-    cd CTAT-LR-fusion && make
+    cd CTAT-LR-fusion && \
+    git submodule foreach --recursive git submodule init && \
+    git submodule foreach --recursive git submodule update && \
+    make
 
+
+RUN pip install pandas
