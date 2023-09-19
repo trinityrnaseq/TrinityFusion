@@ -97,7 +97,7 @@ RUN wget https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfis
 ########
 # Trinity
 
-ENV TRINITY_VERSION=2.14.0
+ENV TRINITY_VERSION=2.15.1
 
 RUN TRINITY_URL="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v${TRINITY_VERSION}/trinityrnaseq-v${TRINITY_VERSION}.FULL.tar.gz" && \
    cd $SRC && \
