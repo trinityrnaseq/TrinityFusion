@@ -9,6 +9,7 @@ use lib("$FindBin::Bin/PerlLib");
 use Pipeliner;
 
 
+
 my $__VERSION__ = "0.3.6";
 
 my $help_flag;
@@ -185,7 +186,8 @@ $output_dir = &Pipeliner::ensure_full_path($output_dir);
 $genome_lib_dir = &Pipeliner::ensure_full_path($genome_lib_dir);
 
 my $DISCASM = $FindBin::Bin . "/DISCASM/DISCASM";
-my $GMAP_FUSION = $FindBin::Bin . "/GMAP-fusion/GMAP-fusion";
+my $CTAT_LR_FUSION = $FindBin::Bin . "/CTAT-LR-fusion/ctat-LR-fusion";
+my $FI_UTILDIR = $FindBin::Bin . "/CTAT-LR-fusion/FusionInspector/util/";
 
 ## ensure we can find Trinity:
 my $trinity_path = `which Trinity`;
@@ -203,9 +205,9 @@ main: {
 
     my $chkpts_dir = "$output_dir/__chkpts";
     my $pipeliner = new Pipeliner( '-checkpoint_dir' => $chkpts_dir,
-                                   '-verbose' => 1);
+                                   '-verbose' => 2);
 
-    my $gmap_fusion_target = "";
+    my $ctat_LR_fusion_fusion_target = "";
 
     my $TrinityFusionMode = ""; # D, UC, or C
     if ($chimeric_junctions) {
@@ -227,7 +229,7 @@ main: {
         
         $pipeliner->add_commands(new Command($cmd, "discasm.ok"));
 
-        $gmap_fusion_target = "trinity_discasm/discasm.Trinity.fasta";
+        $ctat_LR_fusion_fusion_target = "trinity_discasm/discasm.Trinity.fasta";
         
     }
     else {
@@ -243,36 +245,41 @@ main: {
         
         $pipeliner->add_commands(new Command($cmd, "trinity_denovo.ok"));
 
-        $gmap_fusion_target = "Trinity.denovo.fasta";
-        $pipeliner->add_commands(new Command("mv trinity_denovo_outdir.Trinity.fasta $gmap_fusion_target", "trinity_renamed.ok"));
+        $ctat_LR_fusion_fusion_target = "Trinity.denovo.fasta";
+        $pipeliner->add_commands(new Command("mv trinity_denovo_outdir.Trinity.fasta $ctat_LR_fusion_fusion_target", "trinity_renamed.ok"));
 
         $pipeliner->add_commands(new Command("rm -rf ./trinity_denovo_outdir", "trinity_full_cleanup.ok"));
 
         $TrinityFusionMode = "D";
     }
     
-    ## run GMAP-fusion
-    my $gmap_outdir = "trinity_fusion-${TrinityFusionMode}_gmap";
-    my $cmd = "$GMAP_FUSION -T $gmap_fusion_target"
+    ## run ctat-LR-fusion
+    my $ctat_LR_fusion_outdir = "trinity_fusion-${TrinityFusionMode}_ctat-LR-fusion";
+    my $cmd = "$CTAT_LR_FUSION -T $ctat_LR_fusion_fusion_target"
         . " --genome_lib_dir $genome_lib_dir "
         . " --left_fq $left_fq "
         . " --right_fq $right_fq "
         . " --CPU $CPU "
-        . " -L $MIN_TRANS_LEN_TRY_CHIM "
         . " --min_J $MIN_J "
         . " --min_sumJS $MIN_SUM_JS "
         . " --min_novel_junction_support $MIN_NOVEL_J "
-        . " --split_breakpoint_extend_length $SPLIT_BREAKPOINT_EXTEND_LENGTH "
-        . " --max_fuzzy_overlap $MAX_FUZZY_OVERLAP "
-        . " -o $gmap_outdir";
+        . " -o $ctat_LR_fusion_outdir";
     
-    $pipeliner->add_commands(new Command($cmd, "gmap-fusion.ok"));
+    $pipeliner->add_commands(new Command($cmd, "ctat_LR_fusion-fusion.ok"));
     
-    $pipeliner->add_commands(new Command("cp $gmap_outdir/GMAP-fusion.fusion_predictions.tsv TrinityFusion-${TrinityFusionMode}.fusion_predictions.preliminary.tsv",
+    $pipeliner->add_commands(new Command("cp $ctat_LR_fusion_outdir/ctat-LR-fusion.fusion_predictions.tsv TrinityFusion-${TrinityFusionMode}.fusion_predictions.preliminary.tsv",
                                          "define_prelim.ok"));
 
     $pipeliner->add_commands(new Command("$UTILDIR/extract_ref_spliced_fusions.pl TrinityFusion-${TrinityFusionMode}.fusion_predictions.preliminary.tsv > TrinityFusion-${TrinityFusionMode}.fusion_predictions.tsv", "write_final.ok"));
     
+
+    ## add abridged version w/o all the evidence read names.
+    $cmd = "$FI_UTILDIR/column_exclusions.pl TrinityFusion-${TrinityFusionMode}.fusion_predictions.tsv "
+        . " JunctionReads,SpanningFrags,CounterFusionLeftReads,CounterFusionRightReads "
+        . " > TrinityFusion-${TrinityFusionMode}.fusion_predictions.abridged.tsv";
+    $pipeliner->add_commands(new Command($cmd, "abridged_final_preds.abridged.ok"));
+    
+
     $pipeliner->run();
     
     print STDERR "\n\nDone.\n\nSee results at: $output_dir/TrinityFusion-${TrinityFusionMode}.fusion_predictions.tsv\n\n";
