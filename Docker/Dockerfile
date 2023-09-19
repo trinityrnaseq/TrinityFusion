@@ -126,32 +126,16 @@ RUN wget https://github.com/COMBINE-lab/salmon/releases/download/v${SALMON_VERSI
 RUN apt-get install -y curl python3-dev
 RUN pip install pysam
 
-
-########
-# GMAP  (compile this last because this version unfortunately disrupts some headers in DL_LIBRARY_PATH)
-
-ENV GMAP_VERSION=2017-11-15
-WORKDIR $SRC
-RUN GMAP_URL="http://research-pub.gene.com/gmap/src/gmap-gsnap-$GMAP_VERSION.tar.gz" && \
-    wget $GMAP_URL && \
-    tar xvf gmap-gsnap-$GMAP_VERSION.tar.gz && \
-    cd gmap-$GMAP_VERSION && ./configure --prefix=`pwd` && make && make install
-
-
-# patch for gmap installation
-RUN cp $SRC/gmap-$GMAP_VERSION/bin/* $BIN/.
-
-
-
-## TrinityFusion
-
 WORKDIR $SRC
 
-ENV TrinityFusion_CO 3ed8ef27f926c1141c676abbd3fd804dc4e2eb4e
+ENV TrinityFusionVersion 0.4.0
+ENV TrinityFusion_CO 0ccd3126e104ce0cdf5d1976d409cbc585717a03
 
 RUN git clone https://github.com/trinityrnaseq/TrinityFusion.git && \
 	cd TrinityFusion && \
     git checkout ${TrinityFusion_CO} && \
     git submodule init && git submodule update && \
-    cd GMAP-fusion && git submodule init && git submodule update
+    git submodule foreach --recursive git submodule init && \
+    git submodule foreach --recursive git submodule update && \
+    cd CTAT-LR-fusion && make
 

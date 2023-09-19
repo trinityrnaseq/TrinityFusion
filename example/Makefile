@@ -1,4 +1,6 @@
 
+simple: TrinityFusion-C
+
 all: TrinityFusion-D TrinityFusion-C TrinityFusion-UC
 
 
