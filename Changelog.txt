@@ -1,3 +1,7 @@
+v0.4.0, Sep 20, 2023
+- replaces gmap-fusion module with our new ctat-LR-fusion module
+- incl Trinity v2.15.1
+
 v0.3.6 # Nov 7, 2022
 - updates for compatibility with Trinity v2.14.0
 
