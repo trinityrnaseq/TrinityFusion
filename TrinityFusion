@@ -39,6 +39,8 @@ my $MIN_NOVEL_J = 3;
 my $SPLIT_BREAKPOINT_EXTEND_LENGTH = 25;
 my $MAX_FUZZY_OVERLAP = 12;
 
+my $DISCASM_ONLY = 0;
+
 my $SHOW_VERSION = 0;
 
 my $UTILDIR="$FindBin::Bin/util";
@@ -88,6 +90,7 @@ __EOUSAGE
 my $additional_usage_info = <<__EXTRA_USAGE;
 #  Additional parameters:
 #
+#  --discasm_only             : only execute DISCASM and then stop.
 # 
 #  Trinity de novo options: (for full-denovo, not chimeric/unmapped read assembly)
 #
@@ -148,6 +151,8 @@ __EXTRA_USAGE
               'split_breakpoint_extend_length=i' => \$SPLIT_BREAKPOINT_EXTEND_LENGTH,
               'max_fuzzy_overlap=i' => \$MAX_FUZZY_OVERLAP,
                             
+              'discasm_only' => \$DISCASM_ONLY,
+
               'version' => \$SHOW_VERSION,
               
 );
@@ -252,7 +257,14 @@ main: {
 
         $TrinityFusionMode = "D";
     }
-    
+
+    $pipeliner->run();
+
+    if ($DISCASM_ONLY) {
+        print STDERR " ** only running DISCASM as per --discasm_only setting.\n\n";
+        exit(0);
+    }
+        
     ## run ctat-LR-fusion
     my $ctat_LR_fusion_outdir = "trinity_fusion-${TrinityFusionMode}_ctat-LR-fusion";
     my $cmd = "$CTAT_LR_FUSION -T $ctat_LR_fusion_fusion_target"
